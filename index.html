@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nosso Enleio - Jogo para Casais</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&family=Pinyon+Script&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=DM+Mono&display=swap');
+:root{--bg:#fdfbf7;--card:#fffdf9;--primary:#5c1322;--text:#333;--light:#7a6f6f;--spicy:#7a1228;--spicy-text:#f9eed9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans','Helvetica Neue',Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:48px 20px 20px;position:relative;overflow-x:hidden}
+.apoio{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:0;right:0;z-index:6;text-align:center;font-size:.68rem;line-height:1.4;color:var(--primary);padding:0 24px;opacity:0;pointer-events:none;transition:opacity .6s}
+.apoio.on{opacity:.5}
+.apoio span{text-decoration:underline;cursor:pointer}
+.apoio.on span{pointer-events:auto}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:5;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .36 0 0 0 0 .07 0 0 0 0 .13 0 0 0 .2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.fundo{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);height:100%;pointer-events:none;z-index:0;opacity:.07;color:var(--primary)}
+.deco{position:fixed;pointer-events:none;color:var(--primary);z-index:0;height:auto}
+.d1{left:-50px;bottom:-40px;width:270px;transform:rotate(-6deg)}
+.d2{right:-36px;top:-24px;width:160px;transform:rotate(24deg)}
+.screen{display:none;width:100%;max-width:420px;flex-direction:column;align-items:center;padding:20px;position:relative;z-index:2;animation:fade .4s ease-in-out}
+.screen.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.nomes{display:flex;align-items:center;gap:10px;width:100%;margin-bottom:22px}
+.nomes input{flex:1;min-width:0;padding:10px 6px;border:0;border-bottom:1.5px solid var(--primary);border-radius:0;background:transparent;font:inherit;font-size:1.05rem;color:var(--primary);text-align:center;outline:none}
+.nomes input::placeholder{color:var(--light);opacity:.7}
+.nomes span{font-family:'Herr Von Muellerhoff',cursive;font-size:2.4rem;color:var(--primary);line-height:1}
+.nivel{width:100%;margin-bottom:26px;padding:14px;background:#f5ebeb;border:1px dashed var(--spicy);border-radius:26px 20px 28px 18px/20px 28px 18px 26px;text-align:center}
+.nivel-titulo{font-family:'DM Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--spicy);margin-bottom:10px}
+.nivel-opcoes{display:flex;gap:6px}
+.nivel-opcoes button{width:auto;flex:1;margin:0;padding:10px 2px;font-size:.8rem;border-radius:999px;background:transparent;color:var(--spicy)}
+.nivel-opcoes button.on{background:var(--spicy);color:var(--spicy-text)}
+.nivel-opcoes button:not(.on):active{background:rgba(122,18,40,.1)}
+.nivel-desc{font-size:.8rem;color:var(--light);margin-top:10px;min-height:1.2em}
+.vez{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);min-width:170px;padding:7px 24px 9px;text-align:center;z-index:3;border:1.5px solid var(--primary);border-radius:999px;background:var(--card);box-shadow:0 3px 10px rgba(92,19,34,.15)}
+@keyframes giro{from{transform:translateY(-40%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes pouso{0%{transform:scale(1.4)}55%{transform:scale(.94)}100%{transform:scale(1)}}
+.vez-label{display:block;font-family:'DM Mono',monospace;font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--primary)}
+.vez-nome{display:block;font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:2.1rem;color:var(--primary);line-height:1.1}
+.vez-nome.gira{animation:giro .16s ease-out infinite}
+.vez-nome.fim{animation:pouso .5s ease-out}
+.timer{width:auto;margin:18px 0 0;padding:8px 18px;font-family:'DM Mono',monospace;font-size:.85rem;flex-direction:row;gap:8px;border-radius:999px;background:transparent;color:var(--primary);border:1px solid var(--primary)}
+.timer:active{background:rgba(92,19,34,.08)}
+.rel{width:20px;height:22px;flex:none}
+#timer-anel{transition:stroke-dashoffset 1s linear}
+
+
+.is-spicy .vez-label{color:var(--spicy-text);opacity:.9}
+.is-spicy .vez{border-color:rgba(249,238,217,.75);background:rgba(249,238,217,.1);box-shadow:none}
+.is-spicy .vez-nome,.is-spicy .timer{color:var(--spicy-text)}
+.is-spicy .timer{border-color:rgba(249,238,217,.6)}
+.is-spicy .timer:active{background:rgba(249,238,217,.12)}
+.logo-wrap{width:100%;display:flex;flex-direction:column;align-items:center;color:var(--primary);margin-bottom:12px}
+.logo{font-family:'Herr Von Muellerhoff',cursive;font-weight:400;color:var(--primary);-webkit-text-stroke:1.4px var(--primary);font-size:clamp(4.6rem,25vw,6.6rem);line-height:1.05;white-space:nowrap;text-align:center}
+.swash{width:78%;height:auto;margin-top:-6px}
+.subtitle{font-size:.95rem;color:var(--light);text-align:center;margin:8px 0 30px;max-width:340px;line-height:1.5}
+h2{font-family:'Herr Von Muellerhoff',cursive;font-weight:400;-webkit-text-stroke:1px var(--primary);color:var(--primary);font-size:4.2rem;margin-bottom:18px;text-align:center;line-height:1}
+.phase-description{font-size:.9rem;color:var(--light);margin-bottom:8px;text-align:center}
+.toggle-container{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:15px;background:#f5ebeb;border:1px dashed var(--spicy);border-radius:26px 20px 28px 18px/20px 28px 18px 26px;width:100%;cursor:pointer;font-size:.95rem;color:var(--spicy);font-weight:500}
+.toggle-container input{width:20px;height:20px;accent-color:var(--spicy);cursor:pointer}
+button{width:100%;padding:18px 20px;margin-bottom:15px;border:2px solid var(--spicy);border-radius:30px 22px 32px 20px/22px 32px 20px 30px;font-size:1.1rem;font-weight:500;font-family:inherit;cursor:pointer;transition:all .2s;background:var(--spicy);color:var(--spicy-text);display:flex;flex-direction:column;align-items:center;gap:5px}
+button:active{background:#500a18}
+.btn-desc{font-size:.8rem;font-weight:400;opacity:.75}
+.btn-back-text{border:none;text-decoration:underline;background:transparent;color:var(--primary);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;padding:10px;margin-top:5px;font-size:.78rem;width:auto;border-radius:0}
+.btn-back-text:active{background:transparent}
+.btn-prev-container{width:100%;min-height:48px;display:flex;justify-content:flex-start;align-items:center;margin-bottom:12px}
+.btn-prev-icon{display:none;width:44px;height:44px;padding:0;margin:0;border-radius:50%;gap:0;align-items:center;justify-content:center}
+.btn-prev-icon svg{display:block}
+.card-container{width:100%;aspect-ratio:2.5/3.5;margin:36px 0 25px;padding:20px;display:flex;flex-direction:column;position:relative}
+.card-container::before{content:'';position:absolute;inset:0;border-radius:4px;background-color:var(--card);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.05' numOctaves='4' seed='8' result='t'/><feDiffuseLighting in='t' lighting-color='%23fff' surfaceScale='1.8'><feDistantLight azimuth='45' elevation='72'/></feDiffuseLighting></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");background-blend-mode:multiply;filter:url(#deckle) drop-shadow(0 0 10px rgba(92,19,34,.24)) drop-shadow(0 16px 22px rgba(92,19,34,.22));transition:background-color .3s}
+.card-ornament{border:1px solid rgba(92,19,34,.45);border-radius:6px;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px 28px;position:relative}
+.corner-bottom-left,.corner-bottom-right{position:absolute;bottom:10px;color:var(--primary);font-size:15px;line-height:1}
+.corner-bottom-left{left:13px}.corner-bottom-right{right:13px}
+.selo{position:absolute;top:-34px;left:50%;width:78px;height:auto;transform:translateX(-50%) rotate(-4deg);z-index:6;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28))}
+.selo g{display:none}
+.selo .n{display:block}
+.card-counter{position:absolute;top:42px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--light)}
+.card-header{font-size:.65rem;letter-spacing:1.5px;color:var(--light);text-align:center;position:absolute;top:68px}
+.card-text{font-size:1.3rem;font-weight:500;text-align:center;line-height:1.5;color:var(--primary);z-index:2}
+.card-footer{background:var(--primary);color:#fff;padding:6px 14px;border-radius:20px;font-size:.7rem;letter-spacing:1px;font-weight:600;position:absolute;bottom:34px}
+.card-content-wrapper{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;padding:44px 0 70px}
+.end-phase-wrapper{display:none;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;text-align:center;z-index:5;padding-top:40px}
+.end-phase-wrapper h3{font-family:'Herr Von Muellerhoff',cursive;font-weight:400;-webkit-text-stroke:.8px currentColor;font-size:3.2rem;color:var(--primary);margin-bottom:6px;line-height:1}
+.lesson-label{font-family:'DM Mono',monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--light);margin-bottom:8px}
+.lesson{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:1.3rem;line-height:1.3;color:var(--primary);margin-bottom:22px}
+.end-phase-wrapper button{padding:14px;font-size:.95rem}
+.is-spicy::before{background-color:var(--spicy)}
+.is-spicy .card-ornament{border-color:rgba(249,238,217,.4);outline-color:rgba(249,238,217,.4)}
+.is-spicy .corner-bottom-left,.is-spicy .corner-bottom-right,.is-spicy .card-text,.is-spicy .card-header,.is-spicy .card-counter,.is-spicy .lesson-label,.is-spicy .lesson,.is-spicy .end-phase-wrapper h3{color:var(--spicy-text)}
+.is-spicy .card-footer{background:var(--spicy-text);color:var(--spicy)}
+.is-spicy .selo .n{display:none}
+.is-spicy .selo .s{display:block}
+.is-final .selo .s{display:none}
+.is-final .selo .c{display:block}
+.is-spicy .end-phase-wrapper button{background:var(--spicy-text);color:var(--spicy);border-color:var(--spicy-text)}
+.is-spicy .end-phase-wrapper button:active{background:#e8d9bb}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<filter id="deckle" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="4" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="6"/></filter>
+<path id="pt" d="M0 0C-15-12-14-34 0-44 14-34 15-12 0 0Z"/>
+<g id="f5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#pt"/><use href="#pt" transform="rotate(72)"/><use href="#pt" transform="rotate(144)"/><use href="#pt" transform="rotate(216)"/><use href="#pt" transform="rotate(288)"/><circle r="4.5" fill="currentColor" stroke-width="5"/></g>
+<path id="pg" d="M100 82C84 64 82 32 100 18 118 32 116 64 100 82Z"/>
+<g id="flor" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><use href="#pg"/><use href="#pg" transform="rotate(51 100 82)"/><use href="#pg" transform="rotate(103 100 82)"/><use href="#pg" transform="rotate(154 100 82)"/><use href="#pg" transform="rotate(206 100 82)"/><use href="#pg" transform="rotate(257 100 82)"/><use href="#pg" transform="rotate(309 100 82)"/><ellipse cx="100" cy="82" rx="12" ry="8"/><path d="M100 90C104 135 96 190 110 248"/><path d="M104 192C70 176 45 182 28 198 60 208 90 206 104 192Z"/><path d="M106 165C135 140 160 138 176 146 160 172 130 180 106 165Z"/></g>
+<g id="galho" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 250C60 215 95 140 140 90"/><path d="M72 188C58 178 52 170 56 160"/><path d="M92 160C70 140 80 120 100 118 105 138 100 152 92 160Z"/><use href="#f5" transform="translate(138 84) rotate(12) scale(1.05)"/><use href="#f5" transform="translate(55 150) rotate(-25) scale(.8)"/></g>
+</defs></svg>
+<svg class="deco d1" viewBox="0 0 200 260" aria-hidden="true"><g filter="url(#wobble)"><use href="#galho"/></g></svg>
+<svg class="deco d2" viewBox="0 0 200 260" aria-hidden="true"><g filter="url(#wobble)"><use href="#flor"/></g></svg>
+<svg class="fundo" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>
+<filter id="pincel"><feTurbulence type="fractalNoise" baseFrequency=".035 .12" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="18"/></filter>
+<filter id="suave"><feGaussianBlur stdDeviation="2.5"/></filter>
+<filter id="agua" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".003 .09" numOctaves="2" seed="2" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="50" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="3"/></filter>
+<filter id="grao" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="5" result="g"/><feDisplacementMap in="SourceGraphic" in2="g" scale="22"/><feGaussianBlur stdDeviation="1"/></filter>
+<path id="pe" d="M0 0C-30-20-34-70 0-95 34-70 30-20 0 0Z"/>
+<g id="fl2"><use href="#pe"/><use href="#pe" transform="rotate(72)"/><use href="#pe" transform="rotate(144)"/><use href="#pe" transform="rotate(216)"/><use href="#pe" transform="rotate(288)"/></g>
+</defs>
+<g fill="currentColor" filter="url(#pincel)"><path d="M130 250C60 220 20 150 30 110 80 130 120 190 130 250Z"/><path d="M130 250C150 180 190 120 250 90 260 150 200 220 130 250Z"/><path d="M130 250C90 300 60 340 70 380 120 350 140 300 130 250Z"/><path d="M300 40C330 80 330 160 300 230 270 160 270 80 300 40Z"/><path d="M130 250C140 330 150 400 190 470" fill="none" stroke="currentColor" stroke-width="5"/></g>
+<use href="#fl2" fill="currentColor" transform="translate(250 500) rotate(-20)" filter="url(#suave)"/>
+<g transform="translate(0 1240) scale(1 -1)" filter="url(#agua)"><use href="#fl2" fill="currentColor" transform="translate(250 500) rotate(-20)"/></g>
+<g fill="currentColor" filter="url(#grao)"><ellipse cx="90" cy="600" rx="38" ry="52"/><path d="M20 790C20 690 60 650 100 650 150 650 190 700 190 790Z"/></g>
+</svg>
+
+<div class="apoio on" id="apoio">Jogo gratuito. Se quiser contribuir, ajude fazendo um pix para o e-mail <span id="pix" onclick="copiarPix()">guiocassiano@gmail.com</span> ♥</div>
+<div id="screen-home" class="screen active">
+  <div class="logo-wrap">
+    <h1 class="logo">Nosso Enleio</h1>
+    <svg class="swash" viewBox="0 0 360 46" aria-hidden="true"><g filter="url(#wobble)" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M10 26C90 8 220 4 320 18C345 22 340 38 318 36C296 34 300 20 322 18"/></g></svg>
+  </div>
+  <p class="subtitle">Um jogo para se conectar, dar risada e explorar a intimidade. Escolham o momento de vocês.</p>
+  <div class="nomes"><input id="nome1" placeholder="Seu nome" maxlength="14" autocomplete="off"><span>&amp;</span><input id="nome2" placeholder="Nome do par" maxlength="14" autocomplete="off"></div>
+  <div class="nivel" id="nivel"><p class="nivel-titulo">Modo +18</p><div class="nivel-opcoes"><button type="button" class="on" data-n="0" onclick="setNivel(0)">Desligado</button><button type="button" data-n="1" onclick="setNivel(1)">Suave</button><button type="button" data-n="2" onclick="setNivel(2)">Quente</button><button type="button" data-n="3" onclick="setNivel(3)">Ousado</button></div><p class="nivel-desc" id="nivel-desc">Só cartas normais.</p></div>
+  <button onclick="selectMode('recent')"><span>Estamos juntos há pouco tempo</span><span class="btn-desc">Ficantes a Namorados Recentes</span></button>
+  <button onclick="selectMode('long')"><span>Temos muita história juntos</span><span class="btn-desc">Namoro longo, Noivos ou Casados</span></button>
+</div>
+
+<div id="screen-phases" class="screen">
+  <h2 id="phase-title">Fases</h2>
+  <p class="phase-description">Quem conhece melhor o outro?</p>
+  <button onclick="selectPhase(1)">Parte 01 - Quebra-Gelo</button>
+  <p class="phase-description" style="margin-top:15px">Surpresas, histórias e confissões.</p>
+  <button onclick="selectPhase(2)">Parte 02 - Aprofundando</button>
+  <p class="phase-description" style="margin-top:15px">Reflexões profundas (e ações).</p>
+  <button onclick="selectPhase(3)">Parte 03 - Conexão Total</button>
+  <button class="btn-back-text" onclick="showScreen('screen-home')">Voltar ao Início</button>
+</div>
+
+<div id="screen-card" class="screen">
+  <div class="btn-prev-container">
+    <button class="btn-prev-icon" id="btn-prev" onclick="prevCard()" title="Voltar carta anterior" aria-label="Voltar carta anterior"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+  </div>
+  <div class="card-container" id="card-box">
+    <svg class="selo" viewBox="0 0 76 72" aria-hidden="true"><defs><radialGradient id="cera" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#b8493f"/><stop offset=".6" stop-color="#7a1c22"/><stop offset="1" stop-color="#4a0d14"/></radialGradient><radialGradient id="ceraC" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff6e0"/><stop offset=".6" stop-color="#ead8b2"/><stop offset="1" stop-color="#b99c6a"/></radialGradient><path id="cor" d="M38 68C8 46 2 30 8 18 14 5 30 5 38 17 46 5 62 5 68 18 74 30 68 46 38 68Z"/><path id="ramo" d="M38 56V34M38 44C30 42 28 36 30 32M38 40C46 38 48 32 46 28M38 50C32 49 30 45 31 42"/></defs><g class="n"><use href="#cor" fill="url(#cera)"/><use href="#cor" fill="none" stroke="#e29a8e" stroke-opacity=".35" stroke-width="1.5" transform="translate(38 36) scale(.78) translate(-38 -36)"/><use href="#ramo" fill="none" stroke="#e29a8e" stroke-opacity=".7" stroke-width="1.6" stroke-linecap="round"/></g><g class="c"><use href="#cor" fill="url(#ceraC)"/><use href="#cor" fill="none" stroke="#b98a52" stroke-opacity=".5" stroke-width="1.5" transform="translate(38 36) scale(.78) translate(-38 -36)"/><use href="#ramo" fill="none" stroke="#b98a52" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round"/></g><g class="s"><use href="#cor" fill="url(#ceraC)"/><use href="#cor" fill="none" stroke="#b98a52" stroke-opacity=".5" stroke-width="1.5" transform="translate(38 36) scale(.78) translate(-38 -36)"/><text x="38" y="42" text-anchor="middle" font-family="Pinyon Script,cursive" font-size="24" fill="#7a1228">+18</text></g></svg>
+    <div class="card-ornament">
+      <div class="corner-bottom-left">✿</div><div class="corner-bottom-right">✿</div>
+      <div class="card-content-wrapper" id="card-content-wrapper">
+        <div class="card-counter" id="card-counter"></div>
+        <div class="card-header">Isso não é um jogo<br>Para todos que sentem</div>
+        <div class="card-text" id="display-text"></div>
+        <button class="timer" id="timer" onclick="toggleTimer()" style="display:none" aria-label="Cronômetro"><svg class="rel" viewBox="0 0 24 26" aria-hidden="true"><path d="M10 2h4M12 2v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="15" r="9" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="1.6"/><circle id="timer-anel" cx="12" cy="15" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="56.5" transform="rotate(-90 12 15)"/><path d="M12 10v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="timer-t"></span></button>
+        <div class="vez" id="vez"><span class="vez-label">Fala primeiro</span><span class="vez-nome" id="vez-nome"></span></div>
+        <div class="card-footer" id="display-footer"></div>
+      </div>
+      <div class="end-phase-wrapper" id="end-phase-wrapper">
+        <h3>Parte Concluída!</h3>
+        <p class="lesson-label">Ensinamento</p>
+        <p class="lesson" id="lesson"></p>
+        <button id="btn-next-phase" onclick="goToNextPhase()">Ir para próxima fase</button>
+      </div>
+    </div>
+  </div>
+  <button id="btn-next" onclick="nextCard()" style="margin-bottom:10px">Puxar Próxima Carta</button>
+  <button class="btn-back-text" onclick="showScreen('screen-phases')">Mudar de Parte / Sair</button>
+</div>
+
+<script>
+const deck=[
+{mode:'recent',phase:1,text:'Qual é a minha comida favorita no mundo inteiro?'},
+{mode:'recent',phase:1,text:'Qual foi a primeira impressão que você teve de mim quando a gente se conheceu?'},
+{mode:'recent',phase:1,text:'O que eu prefiro: sair pra um bar agitado ou ficar no sofá maratonando série?'},
+{mode:'recent',phase:1,text:'Qual é o meu estilo de música ou banda favorita?'},
+{mode:'recent',phase:1,text:'Qual é o meu maior talento ou habilidade inútil?'},
+{mode:'recent',phase:1,text:'Qual foi o nosso melhor encontro até agora na sua opinião?'},
+{mode:'recent',phase:1,text:'Se eu pudesse viajar pra qualquer lugar amanhã, pra onde eu iria?'},
+{mode:'recent',phase:1,text:'Que roupa minha eu já usei que você mais gostou até hoje?'},
+{mode:'recent',phase:1,text:'O que é que me tira do sério facilmente no dia a dia?'},
+{mode:'recent',phase:1,text:'Que mania ou tique meu você reparou desde o primeiro mês?'},
+{mode:'recent',phase:1,text:'Se eu pudesse jantar com qualquer pessoa famosa, quem eu chamaria?'},
+{mode:'recent',phase:1,text:'Qual parte do meu corpo você mais gostou de descobrir?',isSpicy:true},
+{mode:'recent',phase:1,text:'Qual é a sua fantasia mais leve que a gente poderia realizar hoje à noite?',isSpicy:true},
+{mode:'recent',phase:1,text:'Que tipo de beijo meu você mais gosta (lento, rápido, no pescoço)?',isSpicy:true},
+{mode:'recent',phase:2,text:'Qual foi o exato momento que você percebeu que estava a fim de mim?'},
+{mode:'recent',phase:2,text:'Qual pensamento passou pela sua cabeça no nosso primeiro beijo?'},
+{mode:'recent',phase:2,text:'Qual mensagem eu te mandei que mais te deu aquele frio na barriga?'},
+{mode:'recent',phase:2,text:'O que você não teve coragem de me dizer nas primeiras semanas que a gente se falou?'},
+{mode:'recent',phase:2,text:'O que você mais gosta no meu corpo?'},
+{mode:'recent',phase:2,text:'Como você descreveria a nossa química pra um melhor amigo?'},
+{mode:'recent',phase:2,text:'Qual é o traço da minha personalidade que mais te atrai?'},
+{mode:'recent',phase:2,text:'Qual foi o momento que eu mais te fiz dar risada até agora?'},
+{mode:'recent',phase:2,text:'Qual você acha que é a minha linguagem de amor principal?'},
+{mode:'recent',phase:2,text:'Que talento meu te surpreendeu quando você descobriu?'},
+{mode:'recent',phase:2,text:'Qual foi o momento em que você sentiu mais tesão em mim até hoje?',isSpicy:true},
+{mode:'recent',phase:2,text:'O que eu faço sem querer que te deixa secretamente com tesão?',isSpicy:true},
+{mode:'recent',phase:2,text:'Que tipo de toque te arrepia mais quando estamos sozinhos?',isSpicy:true},
+{mode:'recent',phase:2,text:'O que você gostaria que eu fizesse mais na cama (ou fora dela)?',isSpicy:true},
+{mode:'recent',phase:3,text:'O que você espera construir comigo nos próximos meses?'},
+{mode:'recent',phase:3,text:'Qual é a sua maior insegurança num relacionamento e como eu posso te ajudar com isso?'},
+{mode:'recent',phase:3,text:'(Re)lembrar é viver: abram as primeiras mensagens de flerte no WhatsApp e leiam em voz alta.'},
+{mode:'recent',phase:3,text:'Fiquem de frente, segurem as mãos e se olhem nos olhos em silêncio absoluto por 1 minuto.'},
+{mode:'recent',phase:3,text:'Como você lida com a tristeza e como você gostaria que eu agisse num dia ruim seu?'},
+{mode:'recent',phase:3,text:'O que faz com que você se sinta mais seguro(a) quando estamos juntos?'},
+{mode:'recent',phase:3,text:'Façam uma massagem nas mãos um do outro por 2 minutos enquanto conversam.'},
+{mode:'recent',phase:3,text:'Que sonho de vida você nunca contou pra quase ninguém?'},
+{mode:'recent',phase:3,text:'O que eu trouxe pra sua vida que você não sabia que precisava?'},
+{mode:'recent',phase:3,text:'Olhe nos meus olhos e diga 3 coisas que você admira muito no meu caráter.'},
+{mode:'recent',phase:3,text:'Descreva o seu dia perfeito do começo ao fim.'},
+{mode:'recent',phase:3,text:'Me dê um beijo demorado exatamente no lugar que você sabe que eu sou mais sensível.',isSpicy:true},
+{mode:'recent',phase:3,text:'Sussurre no meu ouvido qual foi o nosso melhor momento íntimo até hoje e por quê.',isSpicy:true},
+{mode:'recent',phase:3,text:'Tire uma peça de roupa minha usando apenas uma mão (e muita calma).',isSpicy:true},
+{mode:'long',phase:1,text:'Pra onde foi a nossa primeira viagem juntos?'},
+{mode:'long',phase:1,text:'Você lembra qual foi o primeiro presente que eu te dei?'},
+{mode:'long',phase:1,text:'Que mania ou hábito meu você acabou pegando com o tempo?'},
+{mode:'long',phase:1,text:'Qual é a nossa piada interna favorita?'},
+{mode:'long',phase:1,text:'Qual é a tarefa da casa que eu mais detesto fazer?'},
+{mode:'long',phase:1,text:'Qual prato que eu cozinho (ou peço) é o seu favorito absoluto?'},
+{mode:'long',phase:1,text:'Qual é a música que melhor define a nossa história?'},
+{mode:'long',phase:1,text:'Que peça de roupa minha você secretamente não suporta?'},
+{mode:'long',phase:1,text:'Qual foi o nosso momento mais engraçado e caótico juntos?'},
+{mode:'long',phase:1,text:'O que eu costumo fazer logo depois de um dia exaustivo de trabalho?'},
+{mode:'long',phase:1,text:'Como eu demonstro que estou ansioso(a) sem dizer uma palavra?'},
+{mode:'long',phase:1,text:'Qual foi o nosso melhor sexo da vida até hoje e por quê?',isSpicy:true},
+{mode:'long',phase:1,text:'O que eu uso pra dormir (ou a falta de roupa) que mais te provoca?',isSpicy:true},
+{mode:'long',phase:1,text:'Qual detalhe do meu corpo você aprendeu a amar mais com o passar dos anos?',isSpicy:true},
+{mode:'long',phase:2,text:'O que você aprendeu com seus pais sobre amor que NÃO quer repetir na nossa relação?'},
+{mode:'long',phase:2,text:'Você já abriu mão de algo que nunca imaginou abrir antes de me conhecer?'},
+{mode:'long',phase:2,text:'Em que momento da nossa história você sentiu mais orgulho de mim?'},
+{mode:'long',phase:2,text:'O que você acha que mais mudou na sua vida (ou em você) desde que estamos juntos?'},
+{mode:'long',phase:2,text:'Qual foi a fase mais difícil que a gente já passou e o que aprendemos com ela?'},
+{mode:'long',phase:2,text:'Se pudéssemos voltar no tempo pra reviver só UM dia da nossa história, qual seria?'},
+{mode:'long',phase:2,text:'O que eu faço que ainda consegue te surpreender, mesmo depois de tanto tempo?'},
+{mode:'long',phase:2,text:'O que a gente deixou de fazer por causa da rotina que você gostaria de voltar a fazer?'},
+{mode:'long',phase:2,text:'Se a nossa história virasse um livro, qual seria o título do capítulo que estamos vivendo hoje?'},
+{mode:'long',phase:2,text:'Do que você sente mais falta do nosso primeiro ano de namoro?'},
+{mode:'long',phase:2,text:'Qual foi o exato momento que você teve certeza absoluta que queria ficar comigo a longo prazo?'},
+{mode:'long',phase:2,text:'Que fetiche ou vontade você tem tido ultimamente que a gente ainda não testou?',isSpicy:true},
+{mode:'long',phase:2,text:'O que mudou na nossa química sexual desde o começo e o que você mais gosta hoje?',isSpicy:true},
+{mode:'long',phase:2,text:'Que lugar inusitado ou situação diferente você ainda tem vontade de transar comigo?',isSpicy:true},
+{mode:'long',phase:3,text:'Exercício da contemplação: Fiquem em pé, de frente, e falem sobre cada parte do corpo que um admira no outro (usem as mãos pra tocar nas partes).'},
+{mode:'long',phase:3,text:'(Re)criem o primeiro date de vocês essa semana. Usem a criatividade pra ficar parecido com a época.'},
+{mode:'long',phase:3,text:'Escrevam agora no celular uma carta de 5 linhas do porquê escolhem continuar juntos todos os dias. Troquem e leiam.'},
+{mode:'long',phase:3,text:'Tragam à tona uma mágoa antiga que vocês já se perdoaram, apenas para celebrar a superação.'},
+{mode:'long',phase:3,text:'O que significa a palavra "casa" pra você hoje, além do espaço físico?'},
+{mode:'long',phase:3,text:'Olhem nos olhos um do outro e completem a frase: "Eu te perdoo por..."'},
+{mode:'long',phase:3,text:'Façam agora um plano de algo totalmente inédito e fora da rotina pra fazerem juntos esse mês.'},
+{mode:'long',phase:3,text:'Compartilhe um detalhe de como você imagina a nossa vida quando formos bem velhinhos.'},
+{mode:'long',phase:3,text:'Deem um abraço em silêncio por 2 minutos ininterruptos, apenas sentindo a respiração um do outro.'},
+{mode:'long',phase:3,text:'Faça cafuné em mim enquanto relembramos os detalhes da melhor viagem que já fizemos.'},
+{mode:'long',phase:3,text:'O que você quer que as pessoas aprendam sobre o amor apenas por olharem pra gente?'},
+{mode:'long',phase:3,text:'Sussurre no meu ouvido exatamente o que você quer que eu faça com você mais tarde.',isSpicy:true},
+{mode:'long',phase:3,text:'Faça uma massagem nos meus ombros e pescoço por 2 minutos, terminando com um beijo onde sei que gosto.',isSpicy:true},
+{mode:'long',phase:3,text:'Me dê o beijo mais provocante que você conseguir, usando as mãos pra me puxar pra perto.',isSpicy:true},
+{mode:'recent',phase:1,text:'Qual é o meu filme ou série favorito pra rever sem enjoar?'},
+{mode:'recent',phase:1,text:'Eu sou mais de manhã ou mais de noite?'},
+{mode:'recent',phase:1,text:'Qual é o meu café da manhã perfeito?'},
+{mode:'recent',phase:1,text:'O que eu faço quando estou nervoso(a) ou envergonhado(a)?'},
+{mode:'recent',phase:1,text:'Qual é o meu maior medo bobo?'},
+{mode:'recent',phase:1,text:'Se eu ganhasse um dia livre sem compromisso, o que eu faria?'},
+{mode:'recent',phase:1,text:'Qual apelido ou palavra carinhosa você mais gosta que eu use com você?'},
+{mode:'recent',phase:1,text:'Qual foi a primeira coisa que te atraiu fisicamente em mim?',isSpicy:true},
+{mode:'recent',phase:1,text:'Em que lugar você gosta de receber um beijo de surpresa?',isSpicy:true},
+{mode:'recent',phase:1,text:'Qual perfume ou cheiro meu te deixa mais balançado(a)?',isSpicy:true},
+{mode:'recent',phase:2,text:'Qual foi a primeira música que te fez lembrar de mim?'},
+{mode:'recent',phase:2,text:'O que você contou sobre mim pros seus amigos que me deixaria envergonhado(a)?'},
+{mode:'recent',phase:2,text:'Qual foi o momento em que você pensou: "acho que estou me apaixonando"?'},
+{mode:'recent',phase:2,text:'O que mais te surpreendeu em mim depois que a gente começou a se ver de perto?'},
+{mode:'recent',phase:2,text:'Qual conversa nossa você nunca esqueceu?'},
+{mode:'recent',phase:2,text:'Qual qualidade sua você acha que eu ainda não percebi?'},
+{mode:'recent',phase:2,text:'O que você tem medo de que eu descubra sobre você?'},
+{mode:'recent',phase:2,text:'O que você mais admira na minha forma de lidar com as pessoas?'},
+{mode:'recent',phase:2,text:'Qual foi o nosso beijo mais gostoso até agora e onde foi?',isSpicy:true},
+{mode:'recent',phase:2,text:'O que você pensa quando me vê arrumado(a) pra sair?',isSpicy:true},
+{mode:'recent',phase:3,text:'Qual hábito seu você gostaria que eu entendesse melhor?'},
+{mode:'recent',phase:3,text:'Qual é o seu maior sonho profissional e como posso te apoiar nele?'},
+{mode:'recent',phase:3,text:'Que tradição você gostaria de criar só nossa?'},
+{mode:'recent',phase:3,text:'Qual foi o momento em que você se sentiu mais acolhido(a) por mim?'},
+{mode:'recent',phase:3,text:'Cada um escreve no celular três palavras que definem o outro. Troquem e leiam em voz alta.'},
+{mode:'recent',phase:3,text:'Qual valor é inegociável pra você num relacionamento?'},
+{mode:'recent',phase:3,text:'Planejem juntos um mini-encontro pra esta semana, com data, lugar e horário.'},
+{mode:'recent',phase:3,text:'Deem um beijo lento de 30 segundos, sem pressa e sem falar nada.',isSpicy:true},
+{mode:'recent',phase:3,text:'Conte em voz baixa o que você mais imagina fazendo comigo num fim de semana sem compromisso.',isSpicy:true},
+{mode:'recent',phase:3,text:'Passe a ponta dos dedos pelo meu braço e me diga o que sente ao me tocar.',isSpicy:true},
+{mode:'long',phase:1,text:'Qual foi a primeira briga boba que a gente teve e como terminou?'},
+{mode:'long',phase:1,text:'Qual é o meu jeito de pedir desculpas?'},
+{mode:'long',phase:1,text:'Qual é o meu cantinho favorito da nossa casa?'},
+{mode:'long',phase:1,text:'Qual é o programa de domingo ideal pra mim?'},
+{mode:'long',phase:1,text:'Quem de nós acorda de pior humor e como o outro lida com isso?'},
+{mode:'long',phase:1,text:'Qual é o meu maior defeito que você acha charmoso?'},
+{mode:'long',phase:1,text:'Qual presente que você ganhou de mim guarda com mais carinho?'},
+{mode:'long',phase:1,text:'Qual foi a nossa noite mais romântica e o que a tornou especial?',isSpicy:true},
+{mode:'long',phase:1,text:'Qual roupa minha te faz querer ficar em casa?',isSpicy:true},
+{mode:'long',phase:1,text:'Em que momento do dia você acha que a nossa química é mais forte?',isSpicy:true},
+{mode:'long',phase:2,text:'Qual decisão difícil a gente tomou juntos e foi a certa?'},
+{mode:'long',phase:2,text:'Qual sonho nosso ficou pelo caminho e vale a pena retomar?'},
+{mode:'long',phase:2,text:'O que você aprendeu sobre si mesmo(a) por viver comigo?'},
+{mode:'long',phase:2,text:'Qual foi a maior prova de companheirismo que você já recebeu de mim?'},
+{mode:'long',phase:2,text:'O que você gostaria que eu entendesse melhor sobre o seu passado?'},
+{mode:'long',phase:2,text:'Qual lembrança de infância você gostaria de ter vivido ao meu lado?'},
+{mode:'long',phase:2,text:'Em que momento você me viu mais vulnerável e como se sentiu?'},
+{mode:'long',phase:2,text:'Qual lembrança íntima nossa você revisita com mais frequência?',isSpicy:true},
+{mode:'long',phase:2,text:'O que você gostaria que a gente fizesse mais pra reacender a chama?',isSpicy:true},
+{mode:'long',phase:2,text:'Que tipo de carinho meu mais te desarma?',isSpicy:true},
+{mode:'long',phase:3,text:'Escrevam cada um três promessas simples pra cumprir nos próximos meses e leiam em voz alta.'},
+{mode:'long',phase:3,text:'Qual lugar do mundo vocês querem conhecer juntos? Marquem uma data pra começar a planejar.'},
+{mode:'long',phase:3,text:'Agradeçam um ao outro por três coisas que passaram despercebidas ultimamente.'},
+{mode:'long',phase:3,text:'Qual ritual a dois vocês querem criar pra não deixar a rotina ganhar?'},
+{mode:'long',phase:3,text:'Fiquem em silêncio por 1 minuto, de mãos dadas, e depois contem o que passou pela cabeça.'},
+{mode:'long',phase:3,text:'Qual é o seu maior orgulho de ter construído esta vida comigo?'},
+{mode:'long',phase:3,text:'Escolham uma música e dancem juntos na sala, mesmo sem ritmo.'},
+{mode:'long',phase:3,text:'Descrevam um ao outro, em voz baixa, a noite perfeita a dois.',isSpicy:true},
+{mode:'long',phase:3,text:'Façam uma massagem nos pés um do outro, com calma, e depois troquem um beijo demorado.',isSpicy:true},
+{mode:'long',phase:3,text:'Digam um ao outro o que mais desejam sentir juntos na próxima semana.',isSpicy:true},
+{mode:'recent',phase:1,text:'Qual é a posição ou situação que você mais tem vontade de experimentar comigo?',isSpicy:true,lvl:3},
+{mode:'recent',phase:1,text:'Fale em voz baixa o que você faria comigo agora se a gente estivesse sozinho.',isSpicy:true,lvl:3},
+{mode:'recent',phase:2,text:'O que eu poderia sussurrar no seu ouvido que te deixaria sem controle?',isSpicy:true,lvl:3},
+{mode:'recent',phase:2,text:'Qual limite nosso você gostaria de ultrapassar só por uma noite, se eu topasse?',isSpicy:true,lvl:3},
+{mode:'recent',phase:3,text:'Um de vocês fecha os olhos e o outro escolhe três formas diferentes de tocar. Depois troquem.',isSpicy:true,lvl:3},
+{mode:'recent',phase:3,text:'Digam um ao outro, olhando nos olhos, exatamente o que querem que aconteça hoje à noite e como.',isSpicy:true,lvl:3},
+{mode:'long',phase:1,text:'Qual pensamento safado sobre mim você já teve no meio de um dia comum?',isSpicy:true,lvl:3},
+{mode:'long',phase:1,text:'Qual é a minha melhor habilidade na cama e qual você gostaria que eu aprimorasse?',isSpicy:true,lvl:3},
+{mode:'long',phase:2,text:'Qual fantasia a gente poderia encenar, com personagem, roupa ou cenário diferente?',isSpicy:true,lvl:3},
+{mode:'long',phase:2,text:'Do que você sente falta na nossa vida sexual e o que topa fazer pra mudar isso?',isSpicy:true,lvl:3},
+{mode:'long',phase:3,text:'Cada um conta em segredo uma fantasia. Escolham uma e combinem a data pra realizá-la.',isSpicy:true,lvl:3},
+{mode:'long',phase:3,text:'Pelos próximos 5 minutos, um manda e o outro obedece, tudo dentro do combinado. Depois invertam.',isSpicy:true,lvl:3}
+];
+const OUSADO=['Qual foi o nosso melhor sexo','Que fetiche ou vontade','Que lugar inusitado','Tire uma peça','Sussurre no meu ouvido exatamente','O que mudou na nossa química sexual','Qual é a sua fantasia mais leve','O que você gostaria que eu fizesse mais na cama','Conte em voz baixa'];
+const QUENTE=['Qual foi o momento em que você sentiu mais tesão','O que eu faço sem querer','Que tipo de toque te arrepia','Me dê um beijo demorado','Sussurre no meu ouvido qual foi','O que eu uso pra dormir','Me dê o beijo mais provocante','Qual lembrança íntima','O que você gostaria que a gente fizesse mais pra reacender','Faça uma massagem nos meus ombros','Qual parte do meu corpo você mais gostou'];
+deck.forEach(c=>{if(c.isSpicy&&!c.lvl)c.lvl=OUSADO.some(s=>c.text.startsWith(s))?3:QUENTE.some(s=>c.text.startsWith(s))?2:1});
+const DESC=['Só cartas normais.','Suave: carinho, beijos e flerte.','Quente: inclui as suaves e traz desejo e provocação.','Ousado: tudo incluído, sem filtro: fantasias, desejos e provocações pesadas.'];
+const LESSONS=[
+'Conhecer o outro é um exercício de todo dia. Quem pergunta com curiosidade nunca termina de descobrir quem ama.',
+'Mostrar-se por inteiro não é fraqueza, é o caminho mais curto para a confiança. Ouvir sem se defender já é uma forma de cuidar.',
+'O amor se sustenta nos pequenos gestos repetidos: presença, escuta e toque. Escolher um ao outro é uma decisão de cada dia.'];
+let currentMode='',currentPhase=1,availableCards=[],idx=0,nivel18=0,turnos=[],spinT=null,tTick=null,tempo=0,wl=null;
+const $=id=>document.getElementById(id);
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');$('apoio').classList.toggle('on',id!=='screen-card')}
+function selectMode(m){manterAcesa();currentMode=m;$('phase-title').innerText=m==='recent'?'Descoberta':'Nossa História';showScreen('screen-phases')}
+function selectPhase(p){
+  currentPhase=p;turnos=[];
+  availableCards=deck.filter(c=>c.mode===currentMode&&c.phase===p&&(!c.isSpicy||c.lvl<=nivel18)).sort(()=>Math.random()-.5);
+  idx=0;updateCardUI();showScreen('screen-card');
+}
+function updateCardUI(){
+  const box=$('card-box'),next=$('btn-next'),prev=$('btn-prev'),content=$('card-content-wrapper'),end=$('end-phase-wrapper');
+  if(idx>=availableCards.length){
+    clearTimeout(spinT);resetTimer();$('apoio').classList.add('on');content.style.display='none';end.style.display='flex';next.style.display='none';prev.style.display='none';
+    const fin=currentPhase===3;box.dataset.lvl='';box.classList.toggle('is-spicy',fin);box.classList.toggle('is-final',fin);
+    end.querySelector('h3').innerText=fin?'Fim de Jogo!':'Parte Concluída!';
+    $('lesson').innerText=LESSONS[currentPhase-1];
+    $('btn-next-phase').innerText=fin?'Voltar ao Menu Inicial':`Ir para Parte 0${currentPhase+1}`;
+    return;
+  }
+  content.style.display='flex';end.style.display='none';next.style.display='flex';
+  prev.style.display=idx>0?'flex':'none';
+  const c=availableCards[idx];
+  $('display-text').innerText=c.text;$('apoio').classList.remove('on');configTimer(c.text);girar(idx);
+  $('card-counter').innerText=`${idx+1}/${availableCards.length}`;
+  $('display-footer').innerText=c.isSpicy?`+18 ${['','SUAVE','QUENTE','OUSADO'][c.lvl]} · PARTE 0${currentPhase}`:`NOSSO ENLEIO - PARTE 0${currentPhase}`;
+  box.classList.remove('is-final');box.dataset.lvl=c.isSpicy?c.lvl:'';box.classList.toggle('is-spicy',!!c.isSpicy);
+}
+function setNivel(n){nivel18=n;document.querySelectorAll('#nivel button').forEach(b=>b.classList.toggle('on',+b.dataset.n===n));$('nivel-desc').textContent=DESC[n]}
+function girar(i){clearTimeout(spinT);const n=[$('nome1').value.trim(),$('nome2').value.trim()],v=$('vez'),el=$('vez-nome');
+  if(!n[0]||!n[1]){v.style.display='none';return}
+  v.style.display='block';
+  if(turnos[i]){el.textContent=turnos[i];el.classList.remove('gira','fim');return}
+  const win=n[Math.random()<.5?0:1];let k=0,d=70;el.classList.remove('fim');el.classList.add('gira');
+  (function passo(){if(d>300){turnos[i]=win;el.textContent=win;el.classList.remove('gira');void el.offsetWidth;el.classList.add('fim');return}el.textContent=n[k++%2];d*=1.2;spinT=setTimeout(passo,d)})()}
+function mostra(t,f){$('timer-t').textContent=t;$('timer-anel').style.strokeDashoffset=f*56.5}
+const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+function resetTimer(){clearInterval(tTick);tTick=null;const b=$('timer');if(b&&tempo)mostra(fmt(tempo),0)}
+function configTimer(t){resetTimer();const m=t.match(/(\d+)\s*(minutos?|segundos?)/),b=$('timer');
+  if(!m){b.style.display='none';tempo=0;return}
+  tempo=(+m[1])*(m[2][0]==='m'?60:1);b.style.display='inline-flex';mostra(fmt(tempo),0)}
+function toggleTimer(){const b=$('timer');if(tTick){resetTimer();return}
+  let r=tempo;mostra(fmt(r),0);
+  tTick=setInterval(()=>{r--;if(r<=0){clearInterval(tTick);tTick=null;mostra('Tempo!',0);apito();return}mostra(fmt(r),1-r/tempo)},1000)}
+function apito(){try{navigator.vibrate&&navigator.vibrate([200,100,200]);const C=window.AudioContext||window.webkitAudioContext,x=new C(),o=x.createOscillator(),g=x.createGain();o.frequency.value=660;g.gain.value=.08;o.connect(g);g.connect(x.destination);o.start();o.stop(x.currentTime+.35)}catch(e){}}
+async function manterAcesa(){try{if('wakeLock' in navigator&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')manterAcesa()});
+function copiarPix(){const s=$('pix');try{navigator.clipboard.writeText('guiocassiano@gmail.com');const t=s.textContent;s.textContent='copiado ♥';setTimeout(()=>{s.textContent=t},1500)}catch(e){}}
+function nextCard(){if(idx<availableCards.length){idx++;updateCardUI()}}
+function prevCard(){if(idx>0){idx--;updateCardUI()}}
+function goToNextPhase(){currentPhase<3?selectPhase(currentPhase+1):showScreen('screen-home')}
+
+</script>
+</body>
+</html>
