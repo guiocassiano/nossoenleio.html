@@ -14,7 +14,7 @@ body::after{content:'';position:fixed;top:0;right:0;bottom:0;left:0;pointer-even
 .apoio p{opacity:.5}
 .pix{text-decoration:underline;cursor:pointer;pointer-events:auto}
 .fundo{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,560px);height:100%;pointer-events:none;z-index:0;opacity:.07;color:var(--primary)}
-.deco{position:fixed;pointer-events:none;color:var(--primary);z-index:0;height:auto}
+.deco{position:fixed;pointer-events:none;color:var(--primary);z-index:0;height:auto;opacity:.1}
 .d1{left:-50px;bottom:-40px;width:250px;transform:rotate(-6deg)}
 .d2{right:-52px;top:-34px;width:130px;transform:rotate(24deg)}
 .screen{display:none;width:100%;max-width:420px;flex-direction:column;align-items:center;padding:8px 20px;position:relative;z-index:2;animation:fade .4s ease-in-out}
@@ -40,7 +40,9 @@ button:active{background:#500a18}
 .chips button small{display:block;font-size:.66rem;font-weight:400;opacity:.75;margin-top:2px}
 .chips button.on{background:var(--spicy);color:var(--spicy-text)}
 .chips button:not(.on):active{background:rgba(122,18,40,.1)}
-.chips.n4 button{font-size:.8rem;padding:10px 2px;border-radius:999px}
+.grupo.linha{display:flex;align-items:center;justify-content:space-between}
+.grupo.linha .rotulo{margin:0;text-align:left;font-size:.74rem;opacity:.9}
+.sel{-webkit-appearance:none;appearance:none;border:1.5px solid var(--spicy);border-radius:999px;background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%237a1228' stroke-width='1.6' stroke-linecap='round'/></svg>") no-repeat right 12px center;color:var(--spicy);font-family:inherit;font-size:1rem;font-weight:500;padding:5px 32px 5px 14px;min-width:0;outline:none}
 #btn-comecar{margin-top:10px}
 .btn-back-text{border:none;text-decoration:underline;background:transparent;color:var(--primary);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;padding:10px;margin:0;font-size:.74rem;width:auto;border-radius:0}
 .btn-back-text:active{background:transparent}
@@ -132,7 +134,7 @@ button:active{background:#500a18}
   <div class="nomes"><input id="nome1" placeholder="Seu nome" maxlength="14" autocomplete="off" autocapitalize="words"><span>&amp;</span><input id="nome2" placeholder="Nome do par" maxlength="14" autocomplete="off" autocapitalize="words"></div>
   <div class="grupo"><p class="rotulo">Relacionamento</p><div class="chips" data-g="mode"><button type="button" class="on" data-v="recent">Recente<small>ficantes, namoro novo</small></button><button type="button" data-v="long">Longo<small>noivos, casados</small></button></div></div>
   <div class="grupo"><p class="rotulo">Vão jogar</p><div class="chips" data-g="dist"><button type="button" class="on" data-v="0">Juntos<small>no mesmo lugar</small></button><button type="button" data-v="1">À distância<small>por chamada</small></button></div></div>
-  <div class="grupo"><p class="rotulo">Modo +18</p><div class="chips n4" data-g="nivel"><button type="button" class="on" data-v="0">Off</button><button type="button" data-v="1">Suave</button><button type="button" data-v="2">Quente</button><button type="button" data-v="3">Ousado</button></div></div>
+  <div class="grupo linha"><p class="rotulo">Modo +18</p><select class="sel" id="nivel-sel" onchange="cfg.nivel=this.value;salvar()" aria-label="Modo +18"><option value="0">Desligado</option><option value="1">Suave</option><option value="2">Quente</option><option value="3">Ousado</option></select></div>
   <button id="btn-comecar" onclick="comecar()">Começar</button>
 </div>
 
@@ -190,7 +192,7 @@ const deck=[
 {mode:'recent',phase:1,text:'Se eu pudesse jantar com qualquer pessoa famosa, quem eu chamaria?'},
 {mode:'recent',phase:1,text:'Qual parte do meu corpo você mais gostou de descobrir?',isSpicy:true},
 {mode:'recent',phase:1,text:'Qual é a sua fantasia mais leve que a gente poderia realizar hoje à noite?',isSpicy:true},
-{mode:'recent',phase:1,text:'Que tipo de beijo meu você mais gosta (lento, rápido, no pescoço)?',isSpicy:true},
+{mode:'recent',phase:1,text:'Que tipo de beijo meu você mais gosta (lento, rápido, com raiva, com saudade)?',isSpicy:true},
 {mode:'recent',phase:2,text:'Qual foi o exato momento que você percebeu que estava a fim de mim?'},
 {mode:'recent',phase:2,text:'Qual pensamento passou pela sua cabeça no nosso primeiro beijo?'},
 {mode:'recent',phase:2,text:'Qual mensagem eu te mandei que mais te deu aquele frio na barriga?'},
@@ -436,7 +438,7 @@ document.querySelectorAll('.nomes input').forEach(el=>el.addEventListener('input
   const p=el.selectionStart,v=el.value.replace(/^\p{L}/u,c=>c.toUpperCase());
   if(v!==el.value){el.value=v;try{el.setSelectionRange(p,p)}catch(e){}}salvar()}));
 (function restaurar(){const s=ls.get('ne_estado');if(!s)return;
-  Object.assign(cfg,s.cfg||{});$('nome1').value=s.n1||'';$('nome2').value=s.n2||'';
+  Object.assign(cfg,s.cfg||{});$('nome1').value=s.n1||'';$('nome2').value=s.n2||'';$('nivel-sel').value=cfg.nivel;
   document.querySelectorAll('.chips').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===cfg[g.dataset.g])));
   titulo();
   if(s.dn===deck.length&&s.tela==='screen-card'&&Array.isArray(s.order)&&s.order.length){
